@@ -67,7 +67,7 @@ export default function Home() {
 
           {/* Avatar */}
           <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-purple-200 shadow-sm">
-            <AvatarPage name={user.name} />
+            <AvatarPage />
           </div>
 
           {/* Name */}

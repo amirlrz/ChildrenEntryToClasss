@@ -1,108 +1,86 @@
 "use client";
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { createClient } from "../../lib/supabse/client";
-import { useRouter } from "next/navigation";
-import Lottie from "lottie-react";
-import school from "../../public/school.json"; // ⬅ انیمیشن لوتی را همینجا بذار
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { createClient } from "../../lib/supabse/client";
+import AvatarPage from "../components/avatar/page";
 
-type ProfileForm = {
+interface UserProfile {
+  id: string;
   name: string;
   LastName: string;
-};
+}
 
-export default function SetProfilePage() {
-  const { register, handleSubmit } = useForm<ProfileForm>();
-  //const [name, setName] = useState("");
-  const [tempName, setTempName] = useState("");
-  const router = useRouter();
+export default function Home() {
   const supabase = createClient();
+  //const { signOut } = useAuthHook();
+  const [users, setUsers] = useState<UserProfile[]>([]);
 
-  // useEffect(() => {
-  //   if (!tempName) return;
-
-  //   const timeout = setTimeout(() => setName(tempName), 500);
-  //   return () => clearTimeout(timeout);
-  // }, [tempName]);
-
-  async function onSubmit(data: ProfileForm) {
-    // const {
-    //   data: { user },
-    //   error: userError,
-    // } = await supabase.auth.getUser();
-  
-    // if (userError || !user) {
-    //   alert("لطفاً وارد شوید");
-    //   return;
-    // }
-  
-    const { error } = await supabase.from("profiles").insert({
-      //user_id: user.id,
-      name: data.name,
-      LastName: data.LastName,
-    });
-  
-    if (error) {
-      console.log(error);
-      toast.error("مشکلی پیش اومد");
-    } else {
-      toast.success(`${data.name} ${data.LastName} وارد شد`);
-      router.push("/"); // می‌تونی صفحه بعدی یا پروفایل کاربر بروی
+  useEffect(() => {
+    // 1️⃣ گرفتن کاربران فعلی
+    async function fetchUsers() {
+      const { data, error } = await supabase.from("profiles").select("*");
+      if (error) {
+        toast.error("خطا در دریافت کاربران");
+        console.error(error);
+        return;
+      }
+      setUsers(data);
     }
-  }
-  
+    fetchUsers();
+
+    // 2️⃣ ایجاد subscription برای Realtime
+    const subscription = supabase
+      .channel("public:profiles")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "profiles" },
+        (payload) => {
+          // وقتی یک کاربر جدید اضافه شد، به لیست اضافه کن
+          setUsers((prev) => [...prev, payload.new as UserProfile]);
+
+        }
+      )
+      .subscribe();
+
+    // 3️⃣ cleanup هنگام unmount
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  }, []);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <div className="min-h-screen flex font-sans flex-col items-center justify-center bg-linear-to-br from-blue-200 to-cyan-200 p-3">
+<div className="flex flex-col gap-3 w-full p-7  bg-linear-to-br from-blue-100 via-cyan-400 to-pink-400 h-screen overflow-y-auto">
+    
+    <h4 className="text-center text-purple-800 font-semibold mb-2 text-sm sm:text-base md:text-lg">
+  تعداد حاضرین: {users.length}
+</h4>
 
-        {/* لوتی */}
-        
+    <div className="flex flex-col gap-2">
+      {users.map((user) => (
+        <div
+          key={user.id}
+          className="flex items-center bg-white gap-2 px-4 py-1  rounded-2xl shadow-md transition-transform transform hover:scale-105 hover:shadow-xl flex-row-reverse w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(33%-0.5rem)]"
+        >
+          {/* Online indicator */}
+          <span className="w-3 h-3 bg-green-400 rounded-full animate-pulse shadow-md"></span>
 
-        <div className="bg-white shadow-lg rounded-3xl p-8 w-full max-w-lg text-center border-4 border-blue-400">
-          <h1 className="text-2xl font-extrabold text-blue-600  bg-linear-to-r mb-3 ">
-            حضور و غیاب کلاس دوم
-          </h1>
-
-          {/* اواتار بزرگ‌تر */}
-          <div className="flex justify-center">
-
-          <Lottie animationData={school} loop className="w-60"  />
+          {/* Avatar */}
+          <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-purple-200 shadow-sm">
+            <AvatarPage />
           </div>
 
-          <p className="mt-4 text-gray-600 font-medium">
-            اسم و فامیلیتو وارد کن تا  وارد بشی✨
+          {/* Name */}
+          <p className="text-sm sm:text-base md:text-lg font-medium text-purple-700 truncate text-right">
+            {user.name} {user.LastName}
           </p>
-
-          <div className="grid grid-cols-1 gap-4 mt-6">
-            
-          <input
-              {...register("name")}
-              type="text"
-              value={tempName}
-              onChange={(e) => setTempName(e.target.value)}
-              placeholder="نام"
-              className="px-4 py-3 rounded-xl border text-black border-green-400 text-lg bg-green-50 "
-            />
-            <input
-              {...register("LastName")}
-              type="text"
-              placeholder="نام خانوادگی"
-              className="px-4 py-3 rounded-xl border text-black border-blue-400 text-lg bg-blue-50  "
-            />
-
-          </div>
-
-          <button
-            type="submit"
-            className="mt-6 w-full py-3 rounded-2xl bg-linear-to-r from-pink-500 to-red-500 text-white text-xl font-bold shadow-lg hover:scale-105 transition"
-          >
-            ورود 🚀
-          </button>
         </div>
-      </div>
-    </form>
+      ))}
+    </div>
+</div>
+
+  
+  
+
   );
 }

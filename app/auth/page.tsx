@@ -56,7 +56,7 @@ export default function SetProfilePage() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <div className="min-h-screen flex font-sans flex-col items-center justify-center bg-linear-to-br from-blue-200 to-cyan-200 p-6">
+      <div className="min-h-screen flex font-sans flex-col items-center justify-center bg-linear-to-br from-blue-200 to-cyan-200 p-3">
 
         {/* لوتی */}
         

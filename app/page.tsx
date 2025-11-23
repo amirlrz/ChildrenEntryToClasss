@@ -38,7 +38,8 @@ export default function Home() {
         { event: "INSERT", schema: "public", table: "profiles" },
         (payload) => {
           // وقتی یک کاربر جدید اضافه شد، به لیست اضافه کن
-          setUsers((prev) => [...prev, payload.new]);
+          setUsers((prev) => [...prev, payload.new as UserProfile]);
+
         }
       )
       .subscribe();

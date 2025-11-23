@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
-import AvatarPage from "../components/avatar/page";
 import { createClient } from "../../lib/supabse/client";
 import { useRouter } from "next/navigation";
 import Lottie from "lottie-react";
@@ -16,17 +15,17 @@ type ProfileForm = {
 
 export default function SetProfilePage() {
   const { register, handleSubmit } = useForm<ProfileForm>();
-  const [name, setName] = useState("");
+  //const [name, setName] = useState("");
   const [tempName, setTempName] = useState("");
   const router = useRouter();
   const supabase = createClient();
 
-  useEffect(() => {
-    if (!tempName) return;
+  // useEffect(() => {
+  //   if (!tempName) return;
 
-    const timeout = setTimeout(() => setName(tempName), 500);
-    return () => clearTimeout(timeout);
-  }, [tempName]);
+  //   const timeout = setTimeout(() => setName(tempName), 500);
+  //   return () => clearTimeout(timeout);
+  // }, [tempName]);
 
   async function onSubmit(data: ProfileForm) {
     // const {

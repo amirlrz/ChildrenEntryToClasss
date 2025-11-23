@@ -2,10 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "../lib/supabse/client";
-import useAuthHook from "./components/authHook/page";
+//import useAuthHook from "./components/authHook/page";
 import AvatarPage from "./components/avatar/page";
-import Lottie from "lottie-react";
-import school from "../public/school.json";
 import toast from "react-hot-toast";
 
 interface UserProfile {
@@ -16,7 +14,7 @@ interface UserProfile {
 
 export default function Home() {
   const supabase = createClient();
-  const { signOut } = useAuthHook();
+  //const { signOut } = useAuthHook();
   const [users, setUsers] = useState<UserProfile[]>([]);
 
   useEffect(() => {

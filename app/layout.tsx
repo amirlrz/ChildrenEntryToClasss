@@ -5,7 +5,7 @@ import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import { ReactQueryProvider } from "./components/providers/ReactQueryProvider";
 import ProtectedRoute from "./components/providers/ProtectedRoute";
-import { ReduxProvider } from "./components/providers/ReduxProvider";
+//import { ReduxProvider } from "./components/providers/ReduxProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,14 +32,14 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-  <ReduxProvider>
+  {/* <ReduxProvider> */}
 <ReactQueryProvider>
     <ProtectedRoute>
       {children}
       <Toaster position="top-center" reverseOrder={false} />
     </ProtectedRoute>
 </ReactQueryProvider>
-  </ReduxProvider>
+  {/* </ReduxProvider> */}
 
       </body>
     </html>

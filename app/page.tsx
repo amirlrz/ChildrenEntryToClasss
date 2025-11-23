@@ -1,65 +1,88 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState } from "react";
+import { createClient } from "../lib/supabse/client";
+import useAuthHook from "./components/authHook/page";
+import AvatarPage from "./components/avatar/page";
+import Lottie from "lottie-react";
+import school from "../public/school.json";
+import toast from "react-hot-toast";
+
+interface UserProfile {
+  id: string;
+  name: string;
+  LastName: string;
+}
 
 export default function Home() {
+  const supabase = createClient();
+  const { signOut } = useAuthHook();
+  const [users, setUsers] = useState<UserProfile[]>([]);
+
+  useEffect(() => {
+    // 1️⃣ گرفتن کاربران فعلی
+    async function fetchUsers() {
+      const { data, error } = await supabase.from("profiles").select("*");
+      if (error) {
+        toast.error("خطا در دریافت کاربران");
+        console.error(error);
+        return;
+      }
+      setUsers(data);
+    }
+    fetchUsers();
+
+    // 2️⃣ ایجاد subscription برای Realtime
+    const subscription = supabase
+      .channel("public:profiles")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "profiles" },
+        (payload) => {
+          // وقتی یک کاربر جدید اضافه شد، به لیست اضافه کن
+          setUsers((prev) => [...prev, payload.new]);
+        }
+      )
+      .subscribe();
+
+    // 3️⃣ cleanup هنگام unmount
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  }, []);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+<div className="flex flex-col gap-3 w-full p-7  bg-linear-to-br from-blue-100 via-cyan-400 to-pink-400 h-screen overflow-y-auto">
+    
+    <h4 className="text-center text-purple-800 font-semibold mb-2 text-sm sm:text-base md:text-lg">
+  تعداد حاضرین: {users.length}
+</h4>
+
+    <div className="flex flex-col gap-2">
+      {users.map((user) => (
+        <div
+          key={user.id}
+          className="flex items-center bg-white gap-2 px-4 py-1  rounded-2xl shadow-md transition-transform transform hover:scale-105 hover:shadow-xl flex-row-reverse w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(33%-0.5rem)]"
+        >
+          {/* Online indicator */}
+          <span className="w-3 h-3 bg-green-400 rounded-full animate-pulse shadow-md"></span>
+
+          {/* Avatar */}
+          <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-purple-200 shadow-sm">
+            <AvatarPage name={user.name} />
+          </div>
+
+          {/* Name */}
+          <p className="text-sm sm:text-base md:text-lg font-medium text-purple-700 truncate text-right">
+            {user.name} {user.LastName}
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      ))}
     </div>
+</div>
+
+  
+  
+
   );
 }
